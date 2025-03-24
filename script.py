@@ -147,12 +147,11 @@ def move_back_to_home():
     chrome_x, chrome_y = chrome_location
     pyautogui.moveTo(chrome_x, chrome_y)
     time.sleep(CONFIG['click_delay'])
-    pyautogui.click()
-    time.sleep(CONFIG['click_delay'])
-    pyautogui.moveTo(100, 100)
+    pyautogui.moveTo(100, 10)
     time.sleep(CONFIG['click_delay'])
     pyautogui.click()
-    time.sleep(CONFIG['click_delay'])
+    time.sleep(CONFIG ['click_delay'])
+    pyautogui.moveRel(200,200)
 
 def cover_to_json():
     print("Converting cover to JSON...")
@@ -212,6 +211,7 @@ def cover_to_json():
     send_x, send_y = send_location
     pyautogui.moveTo(send_x, send_y)
     pyautogui.click()
+    time.sleep(3)
     move_back_to_home()
     
     print("JSON conversion request sent!")
