@@ -82,7 +82,7 @@ def select_and_copy_content(start_coords, end_selector=None, default_end_y=10):
     
     # Move relative to that position for selection start
     print("Moving to adjusted position for selection...")
-    pyautogui.moveRel(200, -45)
+    pyautogui.moveRel(250, -45)
     adjusted_position = pyautogui.position()
     print(f"Adjusted position: {adjusted_position}")
     
@@ -120,7 +120,7 @@ def select_and_copy_content(start_coords, end_selector=None, default_end_y=10):
     
     # Move relative to that position for selection end
     print("Moving to end selection position...")
-    pyautogui.moveRel(150, -50, duration=1)
+    pyautogui.moveRel(-250, -10, duration=1)
     end_position = pyautogui.position()
     print(f"End selection position: {end_position}")
     
