@@ -71,12 +71,12 @@ def select_and_copy_content(start_coords, end_selector=None, default_end_y=10):
         return
     
     start_x, start_y = start_coords
-    adjusted_y = start_y - 10  # Small adjustment to starting position
+    adjusted_y = start_y - 45  # Small adjustment to starting position
     
     # Start selection
     print(f"Starting selection at: ({start_x}, {adjusted_y})")
-    pyautogui.click(start_x, adjusted_y)
-    pyautogui.mouseDown(start_x, adjusted_y)
+    pyautogui.click(start_x+200, adjusted_y)
+    pyautogui.mouseDown(start_x+200, adjusted_y)
     time.sleep(CONFIG['click_delay'])
     
     # Scroll to the top while holding selection
@@ -104,7 +104,7 @@ def select_and_copy_content(start_coords, end_selector=None, default_end_y=10):
                 print(f"Using position with offset: ({end_x}, {end_y})")
     
     # Complete selection and copy
-    pyautogui.moveTo(end_x, end_y, duration=1)
+    pyautogui.moveTo(end_x+150, end_y+50, duration=1)
     pyautogui.mouseUp()
     
     # Copy selected text
@@ -145,7 +145,7 @@ def scroll_select_and_copy(
         'image_path': searchbar_image_path,
         'confidence': CONFIG['search_confidence'],
         'attempts': 5,
-        'offset_y': 130  # 130px below search bar
+        'offset_y': 140  # 130px below search bar
     }
     
     # Perform the selection and copy
