@@ -104,7 +104,7 @@ def select_and_copy_content(start_coords, end_selector=None, default_end_y=10):
                 print(f"Using position with offset: ({end_x}, {end_y})")
     
     # Complete selection and copy
-    pyautogui.moveTo(end_x+150, end_y+50, duration=1)
+    pyautogui.moveTo(end_x+150, end_y-50, duration=1)
     pyautogui.mouseUp()
     
     # Copy selected text
