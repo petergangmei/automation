@@ -207,6 +207,7 @@ def cover_to_json():
     
     print("Pasting completed!")
     
+
     # Look for send button
     send_location = locate_image('./img/send.png')
     if not send_location:
@@ -243,7 +244,7 @@ def scroll_select_and_copy(
     
     # Scroll to bottom and then up slightly
     scroll_to_bottom()
-    scroll_up(5)
+    scroll_up(7)
     
     # Find the target image for starting selection
     start_coords = locate_image(target_image_path)
