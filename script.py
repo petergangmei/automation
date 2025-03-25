@@ -1,6 +1,7 @@
 import pyautogui
 import time
 import platform
+import pyperclip
 
 # Detect operating system
 IS_MAC = platform.system() == 'Darwin'
@@ -19,7 +20,7 @@ DEFAULT_TEXT = """Convert the following raw text into a structured JSON object w
 The JSON should have this structure:
 {
   "book": "Name of the book",
-  “slug:””name-of-the-book”,
+  "slug:""name-of-the-book",
   "chapter": ChapterNumber,
   "language": "ruanglat",
   "content": [
@@ -80,12 +81,40 @@ def scroll_to_bottom(num_scrolls=20):
         pyautogui.scroll(CONFIG['scroll_down_amount'])
         time.sleep(CONFIG['scroll_delay'])
 
-def scroll_up(num_scrolls=5):
-    """Scroll up by a specified amount"""
-    print(f"Scrolling up {num_scrolls} times...")
-    for _ in range(num_scrolls):
-        pyautogui.scroll(CONFIG['scroll_up_amount'])
+def scroll_up_until_found(target_image_path, max_scrolls=30, scroll_amount=400):
+    """
+    Scroll up while checking for target image after each scroll
+    
+    Args:
+        target_image_path (str): Path to the image to look for
+        max_scrolls (int): Maximum number of scrolls to attempt
+        scroll_amount (int): Amount to scroll up each time (positive value)
+        
+    Returns:
+        tuple: (x, y) coordinates of found image, or None if not found after max_scrolls
+    """
+    print(f"Scrolling up while looking for {target_image_path}...")
+    
+    for scroll_count in range(max_scrolls):
+        # Check for image first
+        target_coords = locate_image(
+            target_image_path, 
+            confidence=CONFIG['search_confidence'],
+            attempts=1,  # Just one attempt per scroll
+            scroll_amount=0  # Don't scroll inside locate_image
+        )
+        
+        if target_coords:
+            print(f"Target image found after {scroll_count} scrolls")
+            return target_coords
+        
+        # Not found, scroll up and try again
+        print(f"Scroll up attempt {scroll_count + 1}/{max_scrolls}")
+        pyautogui.scroll(scroll_amount)  # Positive for up
         time.sleep(CONFIG['scroll_delay'])
+    
+    print(f"Target image not found after {max_scrolls} scroll attempts")
+    return None
 
 def select_and_copy_content(start_coords, end_selector=None, default_end_y=10):
     """
@@ -190,7 +219,7 @@ def move_back_to_home():
 
 def check_status(count=1):
     location = locate_image('./img/voice.png', confidence=0.9, attempts=1)
-    if  location:
+    if location:
         print('conversion completed')
         print("JSON conversion request sent!")
         move_back_to_home()
@@ -198,9 +227,6 @@ def check_status(count=1):
         print(f'is processing {count}')
         time.sleep(1)
         check_status(count + 1)
-
-        
-
 
 def cover_to_json():
     print("Converting cover to JSON with default instructions...")
@@ -243,9 +269,7 @@ def cover_to_json():
     # Type the default text first
     print("Typing default instructions text...")
     
-    # For long texts, it's better to paste them rather than type character by character
     # Put the default text in clipboard first (temporarily)
-    import pyperclip
     original_clipboard = pyperclip.paste()  # Save current clipboard
     pyperclip.copy(DEFAULT_TEXT)
     
@@ -292,11 +316,6 @@ def cover_to_json():
 
     check_status()
 
-    
-    
-    
-    
-
 def scroll_select_and_copy(
     target_image_path='./img/rnr.png', 
     searchbar_image_path='./img/searchbar.png', 
@@ -314,14 +333,13 @@ def scroll_select_and_copy(
     print(f"Switching to browser in {preparation_delay} seconds...")
     time.sleep(preparation_delay)
     
-    # Scroll to bottom and then up slightly
+    # Scroll to bottom and then search for the target image while scrolling up
     scroll_to_bottom()
-    scroll_up(8)
     
-    # Find the target image for starting selection
-    start_coords = locate_image(target_image_path)
+    # Find the target image by scrolling up continuously until found
+    start_coords = scroll_up_until_found(target_image_path)
     if not start_coords:
-        print("Target image could not be found. Aborting.")
+        print("Target image could not be found after scrolling up. Aborting.")
         return
     
     # Configure the end selection point
@@ -329,7 +347,7 @@ def scroll_select_and_copy(
         'image_path': searchbar_image_path,
         'confidence': CONFIG['search_confidence'],
         'attempts': 5,
-        'offset_y': 140  # 130px below search bar
+        'offset_y': 140  # 140px below search bar
     }
     
     # Perform the selection and copy
@@ -344,21 +362,20 @@ if __name__ == "__main__":
     # Check platform and print info
     print(f"Running on platform: {platform.system()}")
     
-    # Run the function in a loop 5 times
+    # Run the function in a loop 50 times
     print("Starting scroll, select, and copy operation...")
     
     for iteration in range(1, 51):
         print(f"\n{'='*50}")
-        print(f"Starting iteration {iteration} of 5")
+        print(f"Starting iteration {iteration} of 50")
         print(f"{'='*50}\n")
         
         scroll_select_and_copy()
-        # check_status()
         
-        # Add delay between iterations (except after the last one)
-        # if iteration < 5:
-        #     delay = 2  # Reduced from 10 to 5 seconds delay between iterations
+        # If we want to add a delay between iterations, uncomment this:
+        # if iteration < 50:
+        #     delay = 2  # Seconds delay between iterations
         #     print(f"\nCompleted iteration {iteration}. Waiting {delay} seconds before next iteration...\n")
         #     time.sleep(delay)
         # else:
-        #     print(f"\nAll 5 iterations completed successfully!")
+        #     print(f"\nAll 50 iterations completed successfully!")
