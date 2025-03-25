@@ -14,6 +14,31 @@ CONFIG = {
     'scroll_up_amount': 400,      # Amount to scroll up (positive)
 }
 
+# Default text to paste before the copied content
+DEFAULT_TEXT = """Convert the following raw text into a structured JSON object with the following rules:
+The JSON should have this structure:
+{
+  "book": "Name of the book",
+  “slug:””name-of-the-book”,
+  "chapter": ChapterNumber,
+  "language": "ruanglat",
+  "content": [
+    { "heading": "Heading text" },
+    { "1", "Verse 1 text here." },
+    { "2", "Verse 2 text here." },
+    ...
+  ]
+}
+"book" and "chapter" should be extracted or set manually if not available.
+"language" is always "ruanglat".
+In the "content" array:
+If a line starts with a number and space (e.g. 1 Lorem ipsum), treat it as a verse:
+Extract the number as "verse" and the rest as "text".
+If a line does not start with a number, treat it as a heading:
+Add it as { "heading": "Your Heading Here" }.
+Keep all lines in original order, alternating between headings and verses as they appear.
+"""
+
 def locate_image(image_path, confidence=None, attempts=10, scroll_amount=100):
     """
     Locate an image on screen with multiple attempts.
@@ -28,23 +53,24 @@ def locate_image(image_path, confidence=None, attempts=10, scroll_amount=100):
         tuple: (x, y) center coordinates of found image, or None if not found
     """
     confidence = confidence or CONFIG['search_confidence']
-    print(f"Looking for image: {image_path}...")
+    # print(f"Looking for image: {image_path}...")
     
     for attempt in range(attempts):
         try:
             location = pyautogui.locateOnScreen(image_path, confidence=confidence)
             if location:
-                print(f"Image found at: {location}")
+                # print(f"Image found at: {location}")
                 return pyautogui.center(location)
         except Exception as e:
-            print(f"Search attempt {attempt+1}: {e}")
+            print('----')
+            # print(f"Search attempt {attempt+1}: {e}")
         
         # If image not found and we have more attempts, scroll and try again
         if attempt < attempts - 1:
             pyautogui.scroll(scroll_amount)
             time.sleep(CONFIG['scroll_delay'])
     
-    print(f"Image not found: {image_path}")
+    # print(f"Image not found: {image_path}")
     return None
 
 def scroll_to_bottom(num_scrolls=20):
@@ -82,7 +108,7 @@ def select_and_copy_content(start_coords, end_selector=None, default_end_y=10):
     
     # Move relative to that position for selection start
     print("Moving to adjusted position for selection...")
-    pyautogui.moveRel(250, -45)
+    pyautogui.moveRel(250, -48)
     adjusted_position = pyautogui.position()
     print(f"Adjusted position: {adjusted_position}")
     
@@ -150,8 +176,8 @@ def move_back_to_home():
     pyautogui.moveTo(100, 10)
     time.sleep(CONFIG['click_delay'])
     pyautogui.click()
-    time.sleep(CONFIG ['click_delay'])
-    pyautogui.moveRel(400,400)
+    time.sleep(CONFIG['click_delay'])
+    pyautogui.moveRel(400, 400)
     pyautogui.click()
     next_location = locate_image('./img/next.png')
     if not next_location:
@@ -162,8 +188,22 @@ def move_back_to_home():
     pyautogui.moveTo(next_x, next_y)
     pyautogui.click()
 
+def check_status(count=1):
+    location = locate_image('./img/voice.png', confidence=0.9, attempts=1)
+    if  location:
+        print('conversion completed')
+        print("JSON conversion request sent!")
+        move_back_to_home()
+    else:
+        print(f'is processing {count}')
+        time.sleep(1)
+        check_status(count + 1)
+
+        
+
+
 def cover_to_json():
-    print("Converting cover to JSON...")
+    print("Converting cover to JSON with default instructions...")
     # Locate Chrome icon
     chrome_location = locate_image('./img/chrome.png')
     if not chrome_location:
@@ -196,20 +236,46 @@ def cover_to_json():
     print("Moving relative to entry point...")
     pyautogui.moveRel(0, -10)
     
-    # Click and paste
+    # Click and type default text
     pyautogui.click()
     time.sleep(CONFIG['click_delay'])
     
-    # Use the appropriate hotkey based on OS
+    # Type the default text first
+    print("Typing default instructions text...")
+    
+    # For long texts, it's better to paste them rather than type character by character
+    # Put the default text in clipboard first (temporarily)
+    import pyperclip
+    original_clipboard = pyperclip.paste()  # Save current clipboard
+    pyperclip.copy(DEFAULT_TEXT)
+    
+    # Paste the default text
     if IS_MAC:
         pyautogui.hotkey('command', 'v')
     else:
         pyautogui.hotkey('ctrl', 'v')
     
-    print("Pasting completed!")
+    time.sleep(CONFIG['click_delay'])
+    pyautogui.keyDown('shift')
+    pyautogui.press('enter')  # Add a line break between instructions and data
+    pyautogui.press('enter')  # Add another line break for clarity
+    pyautogui.keyUp('shift')
+    time.sleep(CONFIG['click_delay'])
+    
+    # Put the original copied content back to clipboard
+    pyperclip.copy(original_clipboard)
+    
+    # Now paste the original copied content (the data to be converted)
+    print("Pasting clipboard content (data)...")
+    if IS_MAC:
+        pyautogui.hotkey('command', 'v')
+    else:
+        pyautogui.hotkey('ctrl', 'v')
+    
+    print("Default instructions and data pasting completed!")
     
     # Look for send button
-    send_location = locate_image('./img/send.png', confidence=0.9)  # Increased confidence to 90%
+    send_location = locate_image('./img/send.png', confidence=0.9)
     if not send_location:
         print("Send button not found. Aborting. Wait for 5 seconds and check again ")
         time.sleep(5)
@@ -221,9 +287,15 @@ def cover_to_json():
     pyautogui.moveTo(send_x, send_y)
     pyautogui.click()
     time.sleep(3)
-    move_back_to_home()
+
+    pyautogui.moveRel(0, -200)
+
+    check_status()
+
     
-    print("JSON conversion request sent!")
+    
+    
+    
 
 def scroll_select_and_copy(
     target_image_path='./img/rnr.png', 
@@ -244,7 +316,7 @@ def scroll_select_and_copy(
     
     # Scroll to bottom and then up slightly
     scroll_to_bottom()
-    scroll_up(7)
+    scroll_up(8)
     
     # Find the target image for starting selection
     start_coords = locate_image(target_image_path)
@@ -275,17 +347,18 @@ if __name__ == "__main__":
     # Run the function in a loop 5 times
     print("Starting scroll, select, and copy operation...")
     
-    for iteration in range(1, 6):
+    for iteration in range(1, 51):
         print(f"\n{'='*50}")
         print(f"Starting iteration {iteration} of 5")
         print(f"{'='*50}\n")
         
         scroll_select_and_copy()
+        # check_status()
         
         # Add delay between iterations (except after the last one)
-        if iteration < 5:
-            delay = 5  # Reduced from 10 to 5 seconds delay between iterations
-            print(f"\nCompleted iteration {iteration}. Waiting {delay} seconds before next iteration...\n")
-            time.sleep(delay)
-        else:
-            print(f"\nAll 5 iterations completed successfully!")
+        # if iteration < 5:
+        #     delay = 2  # Reduced from 10 to 5 seconds delay between iterations
+        #     print(f"\nCompleted iteration {iteration}. Waiting {delay} seconds before next iteration...\n")
+        #     time.sleep(delay)
+        # else:
+        #     print(f"\nAll 5 iterations completed successfully!")
