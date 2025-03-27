@@ -16,28 +16,49 @@ CONFIG = {
 }
 
 # Default text to paste before the copied content
-DEFAULT_TEXT = """Convert the following raw text into a structured JSON object with the following rules:
-The JSON should have this structure:
+DEFAULT_TEXT = """Please convert the following Bible text from a regional language into JSON format. 
+Make sure you:
+1) Detect each verse number strictly.
+2) Keep verses sequential.
+3) Avoid merging verse texts.
+4) Preserve all text details.
+
+
+Context:
+- The format for the book name and chapter number will be like "THAUREYMEI 1," where:
+  - "THAUREYMEI" is the book name.
+  - "1" is the chapter number.
+- The book names may vary (e.g., "THAUREYMEI," "GENESIS," etc.), so ensure that each book name is treated uniquely to avoid misidentification.
+- The regional language text should follow this structure: 
+  - Book Name, Chapter Number (e.g., "THAUREYMEI 1").
+  - Verses should be split by numbers, and each verse will be in the format "1", "2", "3", etc., followed by the verse text.
+
+
+Book Name: "THAUREYMEI"
+Chapter: 1
+Slug: "thaureymei"
+Language Name: "ruanglat"
+Language Code: "rongbsi"
+
+Expected JSON Format:
 {
-  "book": "Name of the book",
-  "slug:""name-of-the-book",
-  "chapter": ChapterNumber,
-  "language": "ruanglat",
+  "book": "THAUREYMEI",
+  "slug": "thaureymei",
+  "chapter": 1,
+  "languageName": "ruanglat",
+  "languageCode": "rongbsi",
   "content": [
-    { "heading": "Heading text" },
-    { "1", "Verse 1 text here." },
-    { "2", "Verse 2 text here." },
+    { "heading": "Mbaanv Damhmei Pary" },
+    { "1": "Thaurey khou, Ravguangc rui tingpuk lev kandih damclou khwan e." },
+    { "2": "Mi ganv khou tei kalwn maekna khatni nsa karaeng bam khwan e..." }
     ...
   ]
 }
-"book" and "chapter" should be extracted or set manually if not available.
-"language" is always "ruanglat".
-In the "content" array:
-If a line starts with a number and space (e.g. 1 Lorem ipsum), treat it as a verse:
-Extract the number as "verse" and the rest as "text".
-If a line does not start with a number, treat it as a heading:
-Add it as { "heading": "Your Heading Here" }.
-Keep all lines in original order, alternating between headings and verses as they appear.
+
+Do not stop until all the text is converted to json and don’t ask me “would like like to continue or do this and then until all the text is converted” 
+
+Text to Convert:
+
 """
 
 def locate_image(image_path, confidence=None, attempts=10, scroll_amount=100):
@@ -106,7 +127,25 @@ def scroll_up_until_found(target_image_path, max_scrolls=30, scroll_amount=400):
         
         if target_coords:
             print(f"Target image found after {scroll_count} scrolls")
-            return target_coords
+            # Scroll one more time
+            print("Scrolling one more time as requested")
+            pyautogui.scroll(scroll_amount)
+            time.sleep(CONFIG['scroll_delay'])
+            
+            # Now find the image again at its new position
+            new_target_coords = locate_image(
+                target_image_path,
+                confidence=CONFIG['search_confidence'],
+                attempts=3,  # Try a few times to find it in the new position
+                scroll_amount=0
+            )
+            
+            if new_target_coords:
+                print(f"Target image found at new position after extra scroll")
+                return new_target_coords
+            else:
+                print(f"Target image not found after extra scroll, using original coordinates")
+                return target_coords
         
         # Not found, scroll up and try again
         print(f"Scroll up attempt {scroll_count + 1}/{max_scrolls}")
@@ -337,6 +376,7 @@ def scroll_select_and_copy(
     scroll_to_bottom()
     
     # Find the target image by scrolling up continuously until found
+    # (now includes extra scroll after finding)
     start_coords = scroll_up_until_found(target_image_path)
     if not start_coords:
         print("Target image could not be found after scrolling up. Aborting.")
@@ -362,20 +402,27 @@ if __name__ == "__main__":
     # Check platform and print info
     print(f"Running on platform: {platform.system()}")
     
-    # Run the function in a loop 50 times
-    print("Starting scroll, select, and copy operation...")
+    # Ask user for the number of iterations
+    try:
+        num_iterations = int(input("How many times would you like to run the script? Enter a number: "))
+        if num_iterations <= 0:
+            print("Number must be positive. Setting to 1.")
+            num_iterations = 1
+    except ValueError:
+        print("Invalid input. Setting number of iterations to 1.")
+        num_iterations = 1
     
-    for iteration in range(1, 51):
+    # Run the function in a loop for the specified number of times
+    print(f"Starting scroll, select, and copy operation for {num_iterations} iterations...")
+    
+    for iteration in range(1, num_iterations + 1):
         print(f"\n{'='*50}")
-        print(f"Starting iteration {iteration} of 50")
+        print(f"Starting iteration {iteration} of {num_iterations}")
         print(f"{'='*50}\n")
         
         scroll_select_and_copy()
         
-        # If we want to add a delay between iterations, uncomment this:
-        # if iteration < 50:
-        #     delay = 2  # Seconds delay between iterations
-        #     print(f"\nCompleted iteration {iteration}. Waiting {delay} seconds before next iteration...\n")
-        #     time.sleep(delay)
-        # else:
-        #     print(f"\nAll 50 iterations completed successfully!")
+        if iteration < num_iterations:
+            print(f"\nCompleted iteration {iteration}. Moving to next iteration...\n")
+        else:
+            print(f"\nAll {num_iterations} iterations completed successfully!")
