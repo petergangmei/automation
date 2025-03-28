@@ -35,33 +35,33 @@ Context:
 
 
 Book Name: "THAUREYMEI"
-Chapter: 1
+Chapter: {chapter_number}
 Slug: "thaureymei"
 Language Name: "ruanglat"
 Language Code: "rongbsi"
 
 Expected JSON Format:
-{
+{{
   "book": "THAUREYMEI",
   "slug": "thaureymei",
-  "chapter": 1,
+  "chapter": {chapter_number},
   "languageName": "ruanglat",
   "languageCode": "rongbsi",
   "content": [
-    { "heading": "Mbaanv Damhmei Pary" },
-    { "1": "Thaurey khou, Ravguangc rui tingpuk lev kandih damclou khwan e." },
-    { "2": "Mi ganv khou tei kalwn maekna khatni nsa karaeng bam khwan e..." }
+    {{ "heading": "Mbaanv Damhmei Pary" }},
+    {{ "1": "Thaurey khou, Ravguangc rui tingpuk lev kandih damclou khwan e." }},
+    {{ "2": "Mi ganv khou tei kalwn maekna khatni nsa karaeng bam khwan e..." }}
     ...
   ]
-}
+}}
 
-Do not stop until all the text is converted to json and don’t ask me “would like like to continue or do this and then until all the text is converted” 
+Do not stop until all the text is converted to json and don't ask me "would like like to continue or do this and then until all the text is converted" 
 
 Text to Convert:
 
 """
 
-def locate_image(image_path, confidence=None, attempts=10, scroll_amount=100):
+def find_image_on_screen(image_path, confidence=None, attempts=10, scroll_amount=100):
     """
     Locate an image on screen with multiple attempts.
     
@@ -75,34 +75,30 @@ def locate_image(image_path, confidence=None, attempts=10, scroll_amount=100):
         tuple: (x, y) center coordinates of found image, or None if not found
     """
     confidence = confidence or CONFIG['search_confidence']
-    # print(f"Looking for image: {image_path}...")
     
     for attempt in range(attempts):
         try:
             location = pyautogui.locateOnScreen(image_path, confidence=confidence)
             if location:
-                # print(f"Image found at: {location}")
                 return pyautogui.center(location)
         except Exception as e:
             print('----')
-            # print(f"Search attempt {attempt+1}: {e}")
         
         # If image not found and we have more attempts, scroll and try again
         if attempt < attempts - 1:
             pyautogui.scroll(scroll_amount)
             time.sleep(CONFIG['scroll_delay'])
     
-    # print(f"Image not found: {image_path}")
     return None
 
-def scroll_to_bottom(num_scrolls=20):
+def scroll_to_page_bottom(num_scrolls=20):
     """Scroll to the bottom of the page"""
     print("Scrolling to the bottom of the page...")
     for _ in range(num_scrolls):
         pyautogui.scroll(CONFIG['scroll_down_amount'])
         time.sleep(CONFIG['scroll_delay'])
 
-def scroll_up_until_found(target_image_path, max_scrolls=30, scroll_amount=400):
+def scroll_up_and_find_target(target_image_path, max_scrolls=30, scroll_amount=400):
     """
     Scroll up while checking for target image after each scroll
     
@@ -118,11 +114,11 @@ def scroll_up_until_found(target_image_path, max_scrolls=30, scroll_amount=400):
     
     for scroll_count in range(max_scrolls):
         # Check for image first
-        target_coords = locate_image(
+        target_coords = find_image_on_screen(
             target_image_path, 
             confidence=CONFIG['search_confidence'],
             attempts=1,  # Just one attempt per scroll
-            scroll_amount=0  # Don't scroll inside locate_image
+            scroll_amount=0  # Don't scroll inside find_image_on_screen
         )
         
         if target_coords:
@@ -133,7 +129,7 @@ def scroll_up_until_found(target_image_path, max_scrolls=30, scroll_amount=400):
             time.sleep(CONFIG['scroll_delay'])
             
             # Now find the image again at its new position
-            new_target_coords = locate_image(
+            new_target_coords = find_image_on_screen(
                 target_image_path,
                 confidence=CONFIG['search_confidence'],
                 attempts=3,  # Try a few times to find it in the new position
@@ -155,7 +151,7 @@ def scroll_up_until_found(target_image_path, max_scrolls=30, scroll_amount=400):
     print(f"Target image not found after {max_scrolls} scroll attempts")
     return None
 
-def select_and_copy_content(start_coords, end_selector=None, default_end_y=10):
+def select_and_copy_bible_content(start_coords, end_selector=None, default_end_y=10):
     """
     Select content from start coordinates to end coordinates and copy
     
@@ -196,7 +192,7 @@ def select_and_copy_content(start_coords, end_selector=None, default_end_y=10):
     
     if end_selector and 'image_path' in end_selector:
         # Look for the end selection marker (e.g., search bar)
-        end_coords = locate_image(
+        end_coords = find_image_on_screen(
             end_selector['image_path'], 
             confidence=end_selector.get('confidence', CONFIG['search_confidence']),
             attempts=end_selector.get('attempts', 5)
@@ -231,9 +227,9 @@ def select_and_copy_content(start_coords, end_selector=None, default_end_y=10):
     
     print("Selection and copy completed!")
 
-def move_back_to_home():
-    print("Moving back to home...")
-    chrome_location = locate_image('./img/chrome.png')
+def navigate_to_next_chapter():
+    print("Navigating to the next chapter...")
+    chrome_location = find_image_on_screen('./img/chrome.png')
     if not chrome_location:
         print("Chrome icon not found. Aborting.")
         return
@@ -247,7 +243,7 @@ def move_back_to_home():
     time.sleep(CONFIG['click_delay'])
     pyautogui.moveRel(400, 400)
     pyautogui.click()
-    next_location = locate_image('./img/next.png')
+    next_location = find_image_on_screen('./img/next.png')
     if not next_location:
         print("Next button not found. Aborting.")
         return
@@ -256,21 +252,21 @@ def move_back_to_home():
     pyautogui.moveTo(next_x, next_y)
     pyautogui.click()
 
-def check_status(count=1):
-    location = locate_image('./img/voice.png', confidence=0.9, attempts=1)
+def check_conversion_status(count=1):
+    location = find_image_on_screen('./img/voice.png', confidence=0.9, attempts=1)
     if location:
-        print('conversion completed')
+        print('Conversion completed successfully')
         print("JSON conversion request sent!")
-        move_back_to_home()
+        navigate_to_next_chapter()
     else:
-        print(f'is processing {count}')
+        print(f'Processing in progress... Check {count}')
         time.sleep(1)
-        check_status(count + 1)
+        check_conversion_status(count + 1)
 
-def cover_to_json():
-    print("Converting cover to JSON with default instructions...")
+def convert_bible_text_to_json(chapter_number):
+    print(f"Converting Bible chapter {chapter_number} to JSON...")
     # Locate Chrome icon
-    chrome_location = locate_image('./img/chrome.png')
+    chrome_location = find_image_on_screen('./img/chrome.png')
     if not chrome_location:
         print("Chrome icon not found. Aborting.")
         return
@@ -288,7 +284,7 @@ def cover_to_json():
     time.sleep(CONFIG['click_delay'])
     
     # Locate entry point for pasting
-    entry_location = locate_image('./img/ask.png')
+    entry_location = find_image_on_screen('./img/ask.png')
     if not entry_location:
         print("Entry point not found. Aborting.")
         return
@@ -305,12 +301,12 @@ def cover_to_json():
     pyautogui.click()
     time.sleep(CONFIG['click_delay'])
     
-    # Type the default text first
-    print("Typing default instructions text...")
+    # Format default text with chapter number
+    formatted_text = DEFAULT_TEXT.format(chapter_number=chapter_number)
     
     # Put the default text in clipboard first (temporarily)
     original_clipboard = pyperclip.paste()  # Save current clipboard
-    pyperclip.copy(DEFAULT_TEXT)
+    pyperclip.copy(formatted_text)
     
     # Paste the default text
     if IS_MAC:
@@ -335,14 +331,14 @@ def cover_to_json():
     else:
         pyautogui.hotkey('ctrl', 'v')
     
-    print("Default instructions and data pasting completed!")
+    print("Instructions and data pasted successfully!")
     
     # Look for send button
-    send_location = locate_image('./img/send.png', confidence=0.9)
+    send_location = find_image_on_screen('./img/send.png', confidence=0.9)
     if not send_location:
-        print("Send button not found. Aborting. Wait for 5 seconds and check again ")
+        print("Send button not found. Retrying in 5 seconds...")
         time.sleep(5)
-        cover_to_json()
+        convert_bible_text_to_json(chapter_number)
         return
     
     # Move to send button and click
@@ -353,17 +349,19 @@ def cover_to_json():
 
     pyautogui.moveRel(0, -200)
 
-    check_status()
+    check_conversion_status()
 
-def scroll_select_and_copy(
+def process_bible_chapter(
+    chapter_number,
     target_image_path='./img/rnr.png', 
     searchbar_image_path='./img/searchbar.png', 
     preparation_delay=3
 ):
     """
-    Main function to scroll, select content between two points, and copy.
+    Main function to process a single Bible chapter by scrolling, selecting content, and copying.
     
     Args:
+        chapter_number (int): Current chapter number
         target_image_path (str): Path to the target image that marks start of selection
         searchbar_image_path (str): Path to the search bar image
         preparation_delay (int): Initial delay to switch to browser
@@ -371,13 +369,12 @@ def scroll_select_and_copy(
     # Give time to switch to the browser window
     print(f"Switching to browser in {preparation_delay} seconds...")
     time.sleep(preparation_delay)
-    
+    pyautogui.moveTo(find_image_on_screen('./img/youVersion.png'), duration=1)
     # Scroll to bottom and then search for the target image while scrolling up
-    scroll_to_bottom()
+    scroll_to_page_bottom()
     
     # Find the target image by scrolling up continuously until found
-    # (now includes extra scroll after finding)
-    start_coords = scroll_up_until_found(target_image_path)
+    start_coords = scroll_up_and_find_target(target_image_path)
     if not start_coords:
         print("Target image could not be found after scrolling up. Aborting.")
         return
@@ -391,38 +388,54 @@ def scroll_select_and_copy(
     }
     
     # Perform the selection and copy
-    select_and_copy_content(start_coords, end_selector)
+    select_and_copy_bible_content(start_coords, end_selector)
     
     # Operation completed
-    print("Operation completed successfully!")
+    print("Content selection completed successfully!")
 
-    cover_to_json()
+    convert_bible_text_to_json(chapter_number)
 
 if __name__ == "__main__":
     # Check platform and print info
     print(f"Running on platform: {platform.system()}")
     
-    # Ask user for the number of iterations
+    # Get the total number of chapters and current chapter
     try:
-        num_iterations = int(input("How many times would you like to run the script? Enter a number: "))
-        if num_iterations <= 0:
+        total_chapters = int(input("Enter the total number of chapters to process: "))
+        if total_chapters <= 0:
             print("Number must be positive. Setting to 1.")
-            num_iterations = 1
+            total_chapters = 1
+            
+        current_chapter = int(input(f"Enter the current chapter (1-{total_chapters}): "))
+        if current_chapter <= 0 or current_chapter > total_chapters:
+            print(f"Chapter must be between 1 and {total_chapters}. Setting to 1.")
+            current_chapter = 1
     except ValueError:
-        print("Invalid input. Setting number of iterations to 1.")
-        num_iterations = 1
+        print("Invalid input. Setting to process chapter 1 of 1.")
+        total_chapters = 1
+        current_chapter = 1
     
-    # Run the function in a loop for the specified number of times
-    print(f"Starting scroll, select, and copy operation for {num_iterations} iterations...")
+    # Calculate remaining chapters
+    remaining_chapters = total_chapters - current_chapter + 1
     
-    for iteration in range(1, num_iterations + 1):
+    print(f"\n{'='*50}")
+    print(f"Starting Bible conversion process")
+    print(f"Total chapters: {total_chapters}")
+    print(f"Starting at chapter: {current_chapter}")
+    print(f"Chapters to process: {remaining_chapters}")
+    print(f"{'='*50}\n")
+    
+    # Process each chapter in sequence
+    for chapter_idx in range(current_chapter, total_chapters + 1):
         print(f"\n{'='*50}")
-        print(f"Starting iteration {iteration} of {num_iterations}")
+        print(f"Processing chapter {chapter_idx} of {total_chapters}")
         print(f"{'='*50}\n")
         
-        scroll_select_and_copy()
+        process_bible_chapter(chapter_number=chapter_idx)
         
-        if iteration < num_iterations:
-            print(f"\nCompleted iteration {iteration}. Moving to next iteration...\n")
+        if chapter_idx < total_chapters:
+            print(f"\nCompleted chapter {chapter_idx}. Moving to next chapter...\n")
+            # Add a small delay before processing next chapter
+            time.sleep(3)
         else:
-            print(f"\nAll {num_iterations} iterations completed successfully!")
+            print(f"\nAll chapters completed successfully!")
