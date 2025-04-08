@@ -1,5 +1,9 @@
 import pyautogui
 import time
+import platform
+
+# Detect operating system
+IS_MAC = platform.system() == 'Darwin'
 
 # Common configuration parameters
 CONFIG = {
@@ -126,7 +130,7 @@ def select_and_copy_content(start_coords, end_selector=None, default_end_y=10):
     # Copy selected text
     print("Copying selected text...")
     # Use the appropriate hotkey based on OS
-    if pyautogui.KEYBOARD_PLATFORM == 'darwin':
+    if IS_MAC:
         pyautogui.hotkey('command', 'c')
     else:
         pyautogui.hotkey('ctrl', 'c')
@@ -172,7 +176,7 @@ def cover_to_json():
     time.sleep(CONFIG['click_delay'])
     
     # Use the appropriate hotkey based on OS
-    if pyautogui.KEYBOARD_PLATFORM == 'darwin':
+    if IS_MAC:
         pyautogui.hotkey('command', 'v')
     else:
         pyautogui.hotkey('ctrl', 'v')
@@ -239,7 +243,7 @@ def scroll_select_and_copy(
 
 if __name__ == "__main__":
     # Check platform and print info
-    print(f"Running on platform: {pyautogui.KEYBOARD_PLATFORM}")
+    print(f"Running on platform: {platform.system()}")
     
     # Run the function
     print("Starting scroll, select, and copy operation...")
