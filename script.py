@@ -152,6 +152,8 @@ def move_back_to_home():
     pyautogui.click()
     time.sleep(CONFIG ['click_delay'])
     pyautogui.moveRel(200,200)
+    locate_image('./img/next.png')
+    pyautogui.click()
 
 def cover_to_json():
     print("Converting cover to JSON...")
