@@ -139,7 +139,13 @@ def select_and_copy_content(start_coords, end_selector=None, default_end_y=10):
 
 def move_back_to_home():
     print("Moving back to home...")
-    pyautogui.moveTo(100, 100)
+    chrome_location = locate_image('./img/chrome.png')
+    if not chrome_location:
+        print("Chrome icon not found. Aborting.")
+        return
+    
+    chrome_x, chrome_y = chrome_location
+    pyautogui.moveTo(chrome_x, chrome_y)
     time.sleep(CONFIG['click_delay'])
     pyautogui.click()
     time.sleep(CONFIG['click_delay'])
