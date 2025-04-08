@@ -113,8 +113,8 @@ def select_and_copy_content(start_coords, end_selector=None, default_end_y=10):
     
     print("Selection and copy completed!")
 
-def copy_to_sheet():
-    print("Copying to sheet...")
+def cover_to_json():
+    print("Converting cover to JSON...")
     # Locate Chrome icon
     chrome_location = locate_image('./img/chrome.png')
     if not chrome_location:
@@ -124,29 +124,40 @@ def copy_to_sheet():
     # Move to Chrome icon and adjust x-axis by 300
     chrome_x, chrome_y = chrome_location
     adjusted_x = chrome_x + 300
-    pyautogui.moveTo(adjusted_x, chrome_y)
-    
+
     # Click on the adjusted location
-    pyautogui.click()
+    pyautogui.click(adjusted_x, chrome_y)
     time.sleep(CONFIG['click_delay'])
     
     # Locate entry point for pasting
-    entry_location = locate_image('./img/entry.png')
+    entry_location = locate_image('./img/ask.png')
     if not entry_location:
         print("Entry point not found. Aborting.")
         return
     
     # Move to entry location and adjust y-axis by -50 (move up)
     entry_x, entry_y = entry_location
-    adjusted_entry_y = entry_y - 50
+    adjusted_entry_y = entry_y - 10
     pyautogui.moveTo(entry_x, adjusted_entry_y)
-    
+
     # Click and paste
     pyautogui.click()
     time.sleep(CONFIG['click_delay'])
     pyautogui.hotkey('ctrl', 'v')  # Use 'command', 'v' for Mac
     
     print("Copy to sheet completed!")
+
+    send_location = locate_image('./img/send.png')
+    if not send_location:
+        print("Send button not found. Aborting. Wait for 5 seconds and check again ")
+        time.sleep(5)
+        cover_to_json()
+        return
+    
+    send_x, send_y = send_location
+    pyautogui.moveTo(send_x, send_y)
+    pyautogui.click()
+
 
 def scroll_select_and_copy(
     target_image_path='./img/rnr.png', 
@@ -189,7 +200,7 @@ def scroll_select_and_copy(
     # Operation completed
     print("Operation completed successfully!")
 
-    copy_to_sheet()
+    cover_to_json()
 
 if __name__ == "__main__":
     # Run the function
