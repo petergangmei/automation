@@ -113,6 +113,41 @@ def select_and_copy_content(start_coords, end_selector=None, default_end_y=10):
     
     print("Selection and copy completed!")
 
+def copy_to_sheet():
+    print("Copying to sheet...")
+    # Locate Chrome icon
+    chrome_location = locate_image('./img/chrome.png')
+    if not chrome_location:
+        print("Chrome icon not found. Aborting.")
+        return
+    
+    # Move to Chrome icon and adjust x-axis by 300
+    chrome_x, chrome_y = chrome_location
+    adjusted_x = chrome_x + 300
+    pyautogui.moveTo(adjusted_x, chrome_y)
+    
+    # Click on the adjusted location
+    pyautogui.click()
+    time.sleep(CONFIG['click_delay'])
+    
+    # Locate entry point for pasting
+    entry_location = locate_image('./img/entry.png')
+    if not entry_location:
+        print("Entry point not found. Aborting.")
+        return
+    
+    # Move to entry location and adjust y-axis by -50 (move up)
+    entry_x, entry_y = entry_location
+    adjusted_entry_y = entry_y - 50
+    pyautogui.moveTo(entry_x, adjusted_entry_y)
+    
+    # Click and paste
+    pyautogui.click()
+    time.sleep(CONFIG['click_delay'])
+    pyautogui.hotkey('ctrl', 'v')  # Use 'command', 'v' for Mac
+    
+    print("Copy to sheet completed!")
+
 def scroll_select_and_copy(
     target_image_path='./img/rnr.png', 
     searchbar_image_path='./img/searchbar.png', 
@@ -153,6 +188,8 @@ def scroll_select_and_copy(
     
     # Operation completed
     print("Operation completed successfully!")
+
+    copy_to_sheet()
 
 if __name__ == "__main__":
     # Run the function
