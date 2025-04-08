@@ -152,7 +152,13 @@ def move_back_to_home():
     pyautogui.click()
     time.sleep(CONFIG ['click_delay'])
     pyautogui.moveRel(200,200)
-    locate_image('./img/next.png')
+    next_location = locate_image('./img/next.png')
+    if not next_location:
+        print("Next button not found. Aborting.")
+        return
+    
+    next_x, next_y = next_location
+    pyautogui.moveTo(next_x, next_y)
     pyautogui.click()
 
 def cover_to_json():
@@ -265,6 +271,20 @@ if __name__ == "__main__":
     # Check platform and print info
     print(f"Running on platform: {platform.system()}")
     
-    # Run the function
+    # Run the function in a loop 5 times
     print("Starting scroll, select, and copy operation...")
-    scroll_select_and_copy()
+    
+    for iteration in range(1, 6):
+        print(f"\n{'='*50}")
+        print(f"Starting iteration {iteration} of 5")
+        print(f"{'='*50}\n")
+        
+        scroll_select_and_copy()
+        
+        # Add delay between iterations (except after the last one)
+        if iteration < 5:
+            delay = 10  # 10 seconds delay between iterations
+            print(f"\nCompleted iteration {iteration}. Waiting {delay} seconds before next iteration...\n")
+            time.sleep(delay)
+        else:
+            print(f"\nAll 5 iterations completed successfully!")
