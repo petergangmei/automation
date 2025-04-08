@@ -71,12 +71,20 @@ def select_and_copy_content(start_coords, end_selector=None, default_end_y=10):
         return
     
     start_x, start_y = start_coords
-    adjusted_y = start_y - 45  # Small adjustment to starting position
+    
+    # Move to initial position
+    print(f"Moving to initial position: ({start_x}, {start_y})")
+    pyautogui.moveTo(start_x, start_y)
+    
+    # Move relative to that position for selection start
+    print("Moving to adjusted position for selection...")
+    pyautogui.moveRel(200, -45)
+    adjusted_position = pyautogui.position()
+    print(f"Adjusted position: {adjusted_position}")
     
     # Start selection
-    print(f"Starting selection at: ({start_x}, {adjusted_y})")
-    pyautogui.click(start_x+200, adjusted_y)
-    pyautogui.mouseDown(start_x+200, adjusted_y)
+    pyautogui.click()
+    pyautogui.mouseDown()
     time.sleep(CONFIG['click_delay'])
     
     # Scroll to the top while holding selection
@@ -103,13 +111,25 @@ def select_and_copy_content(start_coords, end_selector=None, default_end_y=10):
                 end_y += end_selector['offset_y']
                 print(f"Using position with offset: ({end_x}, {end_y})")
     
-    # Complete selection and copy
-    pyautogui.moveTo(end_x+150, end_y-50, duration=1)
+    # Move to the end coordinates
+    pyautogui.moveTo(end_x, end_y)
+    
+    # Move relative to that position for selection end
+    print("Moving to end selection position...")
+    pyautogui.moveRel(150, -50, duration=1)
+    end_position = pyautogui.position()
+    print(f"End selection position: {end_position}")
+    
+    # Complete selection
     pyautogui.mouseUp()
     
     # Copy selected text
     print("Copying selected text...")
-    pyautogui.hotkey('ctrl', 'c')  # Use 'command', 'c' for Mac
+    # Use the appropriate hotkey based on OS
+    if pyautogui.KEYBOARD_PLATFORM == 'darwin':
+        pyautogui.hotkey('command', 'c')
+    else:
+        pyautogui.hotkey('ctrl', 'c')
     
     print("Selection and copy completed!")
 
@@ -121,12 +141,16 @@ def cover_to_json():
         print("Chrome icon not found. Aborting.")
         return
     
-    # Move to Chrome icon and adjust x-axis by 300
+    # Move to Chrome icon
     chrome_x, chrome_y = chrome_location
-    adjusted_x = chrome_x + 300
-
+    pyautogui.moveTo(chrome_x, chrome_y)
+    
+    # Move relative to chrome icon position
+    print("Moving relative to Chrome icon...")
+    pyautogui.moveRel(300, 0)
+    
     # Click on the adjusted location
-    pyautogui.click(adjusted_x, chrome_y)
+    pyautogui.click()
     time.sleep(CONFIG['click_delay'])
     
     # Locate entry point for pasting
@@ -135,18 +159,27 @@ def cover_to_json():
         print("Entry point not found. Aborting.")
         return
     
-    # Move to entry location and adjust y-axis by -50 (move up)
+    # Move to entry location
     entry_x, entry_y = entry_location
-    adjusted_entry_y = entry_y - 10
-    pyautogui.moveTo(entry_x, adjusted_entry_y)
-
+    pyautogui.moveTo(entry_x, entry_y)
+    
+    # Move relative to entry position
+    print("Moving relative to entry point...")
+    pyautogui.moveRel(0, -10)
+    
     # Click and paste
     pyautogui.click()
     time.sleep(CONFIG['click_delay'])
-    pyautogui.hotkey('ctrl', 'v')  # Use 'command', 'v' for Mac
     
-    print("Copy to sheet completed!")
-
+    # Use the appropriate hotkey based on OS
+    if pyautogui.KEYBOARD_PLATFORM == 'darwin':
+        pyautogui.hotkey('command', 'v')
+    else:
+        pyautogui.hotkey('ctrl', 'v')
+    
+    print("Pasting completed!")
+    
+    # Look for send button
     send_location = locate_image('./img/send.png')
     if not send_location:
         print("Send button not found. Aborting. Wait for 5 seconds and check again ")
@@ -154,10 +187,12 @@ def cover_to_json():
         cover_to_json()
         return
     
+    # Move to send button and click
     send_x, send_y = send_location
     pyautogui.moveTo(send_x, send_y)
     pyautogui.click()
-
+    
+    print("JSON conversion request sent!")
 
 def scroll_select_and_copy(
     target_image_path='./img/rnr.png', 
@@ -203,6 +238,9 @@ def scroll_select_and_copy(
     cover_to_json()
 
 if __name__ == "__main__":
+    # Check platform and print info
+    print(f"Running on platform: {pyautogui.KEYBOARD_PLATFORM}")
+    
     # Run the function
     print("Starting scroll, select, and copy operation...")
     scroll_select_and_copy()
