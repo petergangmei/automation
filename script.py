@@ -137,6 +137,17 @@ def select_and_copy_content(start_coords, end_selector=None, default_end_y=10):
     
     print("Selection and copy completed!")
 
+def move_back_to_home():
+    print("Moving back to home...")
+    pyautogui.moveTo(100, 100)
+    time.sleep(CONFIG['click_delay'])
+    pyautogui.click()
+    time.sleep(CONFIG['click_delay'])
+    pyautogui.moveTo(100, 100)
+    time.sleep(CONFIG['click_delay'])
+    pyautogui.click()
+    time.sleep(CONFIG['click_delay'])
+
 def cover_to_json():
     print("Converting cover to JSON...")
     # Locate Chrome icon
@@ -195,6 +206,7 @@ def cover_to_json():
     send_x, send_y = send_location
     pyautogui.moveTo(send_x, send_y)
     pyautogui.click()
+    move_back_to_home()
     
     print("JSON conversion request sent!")
 
