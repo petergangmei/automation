@@ -151,7 +151,8 @@ def move_back_to_home():
     time.sleep(CONFIG['click_delay'])
     pyautogui.click()
     time.sleep(CONFIG ['click_delay'])
-    pyautogui.moveRel(200,200)
+    pyautogui.moveRel(400,400)
+    pyautogui.click()
     next_location = locate_image('./img/next.png')
     if not next_location:
         print("Next button not found. Aborting.")
@@ -207,9 +208,8 @@ def cover_to_json():
     
     print("Pasting completed!")
     
-
     # Look for send button
-    send_location = locate_image('./img/send.png')
+    send_location = locate_image('./img/send.png', confidence=0.9)  # Increased confidence to 90%
     if not send_location:
         print("Send button not found. Aborting. Wait for 5 seconds and check again ")
         time.sleep(5)
@@ -284,7 +284,7 @@ if __name__ == "__main__":
         
         # Add delay between iterations (except after the last one)
         if iteration < 5:
-            delay = 10  # 10 seconds delay between iterations
+            delay = 5  # Reduced from 10 to 5 seconds delay between iterations
             print(f"\nCompleted iteration {iteration}. Waiting {delay} seconds before next iteration...\n")
             time.sleep(delay)
         else:
