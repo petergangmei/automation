@@ -310,7 +310,7 @@ def check_conversion_status(count=1, chapter_number=1):
     # Keep searching for voice.png until found while scrolling up
     while not voice_found:
         # Look for voice.png while scrolling up
-        voice_coords = find_image_on_screen('./img/voice.png', attempts=1)
+        voice_coords = find_image_on_screen('./img/voice.png', confidence=0.95, attempts=1)
         if voice_coords:
             print("Voice icon found! Conversion is complete.")
             voice_found = True
@@ -318,8 +318,8 @@ def check_conversion_status(count=1, chapter_number=1):
             
         # If not found, scroll up and continue searching
         print(f"Voice icon not found, scrolling up (attempt {count})...")
-        pyautogui.scroll(CONFIG['scroll_up_amount'])  # Positive value for scrolling up
-        time.sleep(CONFIG['scroll_delay'])
+        # pyautogui.scroll(CONFIG['scroll_up_amount'])  # Positive value for scrolling up
+        time.sleep(2)
         count += 1
     
     # Only proceed with copy and save operations after voice.png is found
@@ -346,7 +346,7 @@ def check_conversion_status(count=1, chapter_number=1):
             time.sleep(CONFIG['click_delay'])
             
             # Move relative to right-click position and click
-            pyautogui.moveRel(50, 50)
+            pyautogui.moveRel(20, 20)
             pyautogui.click()
             time.sleep(CONFIG['click_delay'])
             
@@ -455,7 +455,7 @@ def process_bible_chapter(
     chapter_number,
     target_image_path='./img/rnr.png', 
     searchbar_image_path='./img/searchbar.png', 
-    preparation_delay=3
+    preparation_delay=0
 ):
     """
     Main function to process a single Bible chapter by scrolling, selecting content, and copying.
