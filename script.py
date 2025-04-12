@@ -8,7 +8,7 @@ IS_MAC = platform.system() == 'Darwin'
 
 # Common configuration parameters
 CONFIG = {
-    'scroll_delay': 0.2,          # Delay between scroll actions
+    'scroll_delay': 0.1,          # Delay between scroll actions
     'click_delay': 0.5,           # Delay after clicking
     'search_confidence': 0.8,     # Confidence level for image recognition
     'scroll_down_amount': -400,   # Amount to scroll down (negative)
@@ -151,7 +151,7 @@ def scroll_up_and_find_target(target_image_path, max_scrolls=30, scroll_amount=4
     print(f"Target image not found after {max_scrolls} scroll attempts")
     return None
 
-def scroll_down_and_find_target(target_image_path, max_scrolls=50, scroll_amount=None):
+def scroll_down_and_find_target(target_image_path, max_scrolls=100, scroll_amount=None):
     """
     Scroll down while checking for target image after each scroll
     
@@ -312,17 +312,27 @@ def check_conversion_status(count=1, chapter_number=1):
         # Look for voice.png while scrolling up
         voice_coords = find_image_on_screen('./img/voice.png', confidence=0.95, attempts=1)
         if voice_coords:
-            print("Voice icon found! Conversion is complete.")
-            voice_found = True
-            break
+            print("Voice icon found! Waiting 10 seconds for human verification...")
+            time.sleep(10)  # Wait for human verification
+            
+            # Verify if voice icon is still there after delay
+            verify_coords = find_image_on_screen('./img/voice.png', confidence=0.95, attempts=1)
+            if verify_coords:
+                print("Voice icon verified! Proceeding with copy operation...")
+                voice_found = True
+                break
+            else:
+                print("Voice icon disappeared after verification. Continuing search...")
+                count += 1
+                continue
             
         # If not found, scroll up and continue searching
         print(f"Voice icon not found, scrolling up (attempt {count})...")
-        pyautogui.scroll(CONFIG['scroll_down_amount'])  # Positive value for scrolling up
+        pyautogui.scroll(CONFIG['scroll_down_amount'])
         time.sleep(2)
         count += 1
     
-    # Only proceed with copy and save operations after voice.png is found
+    # Only proceed with copy and save operations after voice.png is found and verified
     if voice_found:
         # Now look for the copy button
         print("Looking for copy button...")
@@ -485,7 +495,7 @@ def process_bible_chapter(
     # Try to find YouVersion indicator to confirm we're on the right page
     youversion_coords = find_image_on_screen('./img/youVersion.png')
     if youversion_coords:
-        pyautogui.moveTo(youversion_coords, duration=0.3)
+        pyautogui.moveTo(youversion_coords, duration=0.2)
     else:
         print("Warning: YouVersion indicator not found. Make sure you're on the correct page.")
     
