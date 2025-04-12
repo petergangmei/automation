@@ -301,69 +301,67 @@ def navigate_to_next_chapter():
     pyautogui.moveTo(next_x, next_y)
     pyautogui.click()
 
-def check_conversion_status(count=1, timeout=60, chapter_number=1):
+def check_conversion_status(count=1, chapter_number=1):
     """Check if the conversion is complete and save the JSON file"""
     print(f"Checking conversion status (attempt {count})...")
     
-    start_time = time.time()
     voice_found = False
     
-    while time.time() - start_time < timeout:
-        # Look for voice.png while scrolling down
+    # Keep searching for voice.png until found while scrolling up
+    while not voice_found:
+        # Look for voice.png while scrolling up
         voice_coords = find_image_on_screen('./img/voice.png', attempts=1)
         if voice_coords:
             print("Voice icon found! Conversion is complete.")
             voice_found = True
             break
             
-        # If not found, scroll down and continue searching
-        print(f"Voice icon not found, scrolling down (attempt {count})...")
-        pyautogui.scroll(CONFIG['scroll_down_amount'])
+        # If not found, scroll up and continue searching
+        print(f"Voice icon not found, scrolling up (attempt {count})...")
+        pyautogui.scroll(CONFIG['scroll_up_amount'])  # Positive value for scrolling up
         time.sleep(CONFIG['scroll_delay'])
         count += 1
     
-    if not voice_found:
-        print(f"Voice icon not found after {timeout} seconds. Timeout reached.")
-        return False
-    
-    # Now look for the copy button
-    print("Looking for copy button...")
-    copy_coords = find_image_on_screen('./img/copy.png', attempts=5)
-    if copy_coords:
-        print("Copy button found, clicking it...")
-        pyautogui.moveTo(copy_coords)
-        pyautogui.click()
-        time.sleep(CONFIG['click_delay'])
-    else:
-        print("Could not find copy button!")
-        return False
-    
-    # Look for books/genesis.png to save the JSON
-    print("Looking for books icon...")
-    books_coords = find_image_on_screen('./img/books/genesis.png', attempts=5)
-    if books_coords:
-        print("Books icon found, right-clicking it...")
-        pyautogui.moveTo(books_coords)
-        pyautogui.rightClick()
-        time.sleep(CONFIG['click_delay'])
+    # Only proceed with copy and save operations after voice.png is found
+    if voice_found:
+        # Now look for the copy button
+        print("Looking for copy button...")
+        copy_coords = find_image_on_screen('./img/copy.png', attempts=5)
+        if copy_coords:
+            print("Copy button found, clicking it...")
+            pyautogui.moveTo(copy_coords)
+            pyautogui.click()
+            time.sleep(CONFIG['click_delay'])
+        else:
+            print("Could not find copy button!")
+            return False
         
-        # Move relative to right-click position and click
-        pyautogui.moveRel(50, 50)
-        pyautogui.click()
-        time.sleep(CONFIG['click_delay'])
-        
-        # Type the chapter number with .json extension
-        chapter_text = f"{chapter_number}.json"
-        pyautogui.write(chapter_text)
-        pyautogui.press('enter')
-        time.sleep(CONFIG['click_delay'])
-        
-        print(f"Successfully saved chapter {chapter_number} as JSON!")
-        navigate_to_next_chapter()
-        return True
-    else:
-        print("Could not find books icon!")
-        return False
+        # Look for books/genesis.png to save the JSON
+        print("Looking for books icon...")
+        books_coords = find_image_on_screen('./img/books/genesis.png', attempts=5)
+        if books_coords:
+            print("Books icon found, right-clicking it...")
+            pyautogui.moveTo(books_coords)
+            pyautogui.rightClick()
+            time.sleep(CONFIG['click_delay'])
+            
+            # Move relative to right-click position and click
+            pyautogui.moveRel(50, 50)
+            pyautogui.click()
+            time.sleep(CONFIG['click_delay'])
+            
+            # Type the chapter number with .json extension
+            chapter_text = f"{chapter_number}.json"
+            pyautogui.write(chapter_text)
+            pyautogui.press('enter')
+            time.sleep(CONFIG['click_delay'])
+            
+            print(f"Successfully saved chapter {chapter_number} as JSON!")
+            navigate_to_next_chapter()
+            return True
+        else:
+            print("Could not find books icon!")
+            return False
 
 def convert_bible_text_to_json(chapter_number):
     print(f"Converting Bible chapter {chapter_number} to JSON...")
