@@ -552,6 +552,6 @@ if __name__ == "__main__":
         if chapter_idx < total_chapters:
             print(f"\nCompleted chapter {chapter_idx}. Moving to next chapter...\n")
             # Add a small delay before processing next chapter
-            time.sleep(3)
+            # time.sleep()
         else:
             print(f"\nAll chapters completed successfully!")
