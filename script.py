@@ -485,7 +485,7 @@ def process_bible_chapter(
     # Try to find YouVersion indicator to confirm we're on the right page
     youversion_coords = find_image_on_screen('./img/youVersion.png')
     if youversion_coords:
-        pyautogui.moveTo(youversion_coords, duration=1)
+        pyautogui.moveTo(youversion_coords, duration=0.3)
     else:
         print("Warning: YouVersion indicator not found. Make sure you're on the correct page.")
     
