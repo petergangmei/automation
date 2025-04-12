@@ -11,7 +11,7 @@ CONFIG = {
     'scroll_delay': 0.2,          # Delay between scroll actions
     'click_delay': 0.5,           # Delay after clicking
     'search_confidence': 0.8,     # Confidence level for image recognition
-    'scroll_down_amount': -300,   # Amount to scroll down (negative)
+    'scroll_down_amount': -400,   # Amount to scroll down (negative)
     'scroll_up_amount': 400,      # Amount to scroll up (positive)
 }
 
@@ -318,7 +318,7 @@ def check_conversion_status(count=1, chapter_number=1):
             
         # If not found, scroll up and continue searching
         print(f"Voice icon not found, scrolling up (attempt {count})...")
-        # pyautogui.scroll(CONFIG['scroll_up_amount'])  # Positive value for scrolling up
+        pyautogui.scroll(CONFIG['scroll_down_amount'])  # Positive value for scrolling up
         time.sleep(2)
         count += 1
     
@@ -357,6 +357,18 @@ def check_conversion_status(count=1, chapter_number=1):
             time.sleep(CONFIG['click_delay'])
             
             print(f"Successfully saved chapter {chapter_number} as JSON!")
+
+            time.sleep(CONFIG['click_delay'])
+            if IS_MAC:
+                pyautogui.hotkey('command', 'v')
+                time.sleep(CONFIG['click_delay'])
+                pyautogui.hotkey('command', 's')
+            else:
+                pyautogui.hotkey('ctrl', 'v')
+                time.sleep(CONFIG['click_delay'])
+                pyautogui.hotkey('ctrl', 's')
+            
+            time.sleep(CONFIG['click_delay'])
             navigate_to_next_chapter()
             return True
         else:
