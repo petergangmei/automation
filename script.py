@@ -11,7 +11,7 @@ CONFIG = {
     'scroll_delay': 0.2,          # Delay between scroll actions
     'click_delay': 0.5,           # Delay after clicking
     'search_confidence': 0.8,     # Confidence level for image recognition
-    'scroll_down_amount': -500,   # Amount to scroll down (negative)
+    'scroll_down_amount': -300,   # Amount to scroll down (negative)
     'scroll_up_amount': 400,      # Amount to scroll up (positive)
 }
 
@@ -151,6 +151,55 @@ def scroll_up_and_find_target(target_image_path, max_scrolls=30, scroll_amount=4
     print(f"Target image not found after {max_scrolls} scroll attempts")
     return None
 
+def scroll_down_and_find_target(target_image_path, max_scrolls=50, scroll_amount=None):
+    """
+    Scroll down while checking for target image after each scroll
+    
+    Args:
+        target_image_path (str): Path to the image to look for
+        max_scrolls (int): Maximum number of scrolls to attempt
+        scroll_amount (int): Amount to scroll down each time (negative value)
+        
+    Returns:
+        tuple: (x, y) coordinates of found image, or None if not found after max_scrolls
+    """
+    print(f"Scrolling down while looking for {target_image_path}...")
+    
+    # Check if the image is already visible before scrolling
+    target_coords = find_image_on_screen(
+        target_image_path, 
+        confidence=CONFIG['search_confidence'],
+        attempts=1,
+        scroll_amount=0
+    )
+    
+    if target_coords:
+        print(f"Target image already visible, no need to scroll")
+        return target_coords
+    
+    scroll_amount = scroll_amount or CONFIG['scroll_down_amount']
+    
+    for scroll_count in range(max_scrolls):
+        # Scroll down
+        print(f"Scroll down attempt {scroll_count + 1}/{max_scrolls}")
+        pyautogui.scroll(scroll_amount)  # Negative for down
+        time.sleep(CONFIG['scroll_delay'])
+        
+        # Check for image after scrolling
+        target_coords = find_image_on_screen(
+            target_image_path, 
+            confidence=CONFIG['search_confidence'],
+            attempts=1,  # Just one attempt per scroll
+            scroll_amount=0  # Don't scroll inside find_image_on_screen
+        )
+        
+        if target_coords:
+            print(f"Target image found after {scroll_count + 1} scrolls")
+            return target_coords
+    
+    print(f"Target image not found after {max_scrolls} scroll attempts")
+    return None
+
 def select_and_copy_bible_content(start_coords, end_selector=None, default_end_y=10):
     """
     Select content from start coordinates to end coordinates and copy
@@ -252,16 +301,22 @@ def navigate_to_next_chapter():
     pyautogui.moveTo(next_x, next_y)
     pyautogui.click()
 
-def check_conversion_status(count=1):
-    location = find_image_on_screen('./img/voice.png', confidence=0.9, attempts=1)
-    if location:
-        print('Conversion completed successfully')
-        print("JSON conversion request sent!")
-        navigate_to_next_chapter()
-    else:
-        print(f'Processing in progress... Check {count}')
+def check_conversion_status(count=1, timeout=60):
+    """Check if the conversion is complete by looking for the 'Copy' button"""
+    print(f"Checking conversion status (attempt {count})...")
+    
+    start_time = time.time()
+    while time.time() - start_time < timeout:
+        copy_button = find_image_on_screen('./img/copy.png', attempts=1)
+        if copy_button:
+            print("Conversion complete! Copy button found.")
+            print("JSON conversion request sent!")
+            navigate_to_next_chapter()
+            return True
         time.sleep(1)
-        check_conversion_status(count + 1)
+    
+    print(f"Conversion not complete after {timeout} seconds. Timeout reached.")
+    return False
 
 def convert_bible_text_to_json(chapter_number):
     print(f"Converting Bible chapter {chapter_number} to JSON...")
@@ -369,14 +424,18 @@ def process_bible_chapter(
     # Give time to switch to the browser window
     print(f"Switching to browser in {preparation_delay} seconds...")
     time.sleep(preparation_delay)
-    pyautogui.moveTo(find_image_on_screen('./img/youVersion.png'), duration=1)
-    # Scroll to bottom and then search for the target image while scrolling up
-    scroll_to_page_bottom()
     
-    # Find the target image by scrolling up continuously until found
-    start_coords = scroll_up_and_find_target(target_image_path)
+    # Try to find YouVersion indicator to confirm we're on the right page
+    youversion_coords = find_image_on_screen('./img/youVersion.png')
+    if youversion_coords:
+        pyautogui.moveTo(youversion_coords, duration=1)
+    else:
+        print("Warning: YouVersion indicator not found. Make sure you're on the correct page.")
+    
+    # Find the target image by scrolling down until found
+    start_coords = scroll_down_and_find_target(target_image_path)
     if not start_coords:
-        print("Target image could not be found after scrolling up. Aborting.")
+        print("Target image could not be found after scrolling down. Aborting.")
         return
     
     # Configure the end selection point
